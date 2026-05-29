@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -282,16 +283,65 @@ fun MusicPlayerScreen(
                 }
                 else -> {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        // Category Label (Uppercase, tracking wider, primary highlight)
-                        Text(
-                            text = "Bütün Mahnılar (${songs.size})".uppercase(),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary,
-                            lineHeight = 16.sp,
-                            letterSpacing = 1.2.sp,
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
-                        )
+                        // Category Label + Elegant Auto-Play Switch
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Bütün Mahnılar (${songs.size})".uppercase(),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary,
+                                lineHeight = 16.sp,
+                                letterSpacing = 1.2.sp
+                            )
+                            
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        val current = viewModel.isAutoPlayEnabled.value
+                                        viewModel.setAutoPlayEnabled(context, !current)
+                                    }
+                                    .padding(horizontal = 6.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Açılışda avtomatik oynat",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFFCAC4D0)
+                                )
+                                val isAutoPlayEnabled by viewModel.isAutoPlayEnabled.collectAsState()
+                                Switch(
+                                    checked = isAutoPlayEnabled,
+                                    onCheckedChange = { viewModel.setAutoPlayEnabled(context, it) },
+                                    thumbContent = if (isAutoPlayEnabled) {
+                                        {
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(SwitchDefaults.IconSize)
+                                            )
+                                        }
+                                    } else null,
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = Color(0xFF381E72),
+                                        checkedTrackColor = Color(0xFFD0BCFE),
+                                        uncheckedThumbColor = Color(0xFF938F99),
+                                        uncheckedTrackColor = Color(0xFF313033)
+                                    ),
+                                    modifier = Modifier
+                                        .scale(0.8f)
+                                        .testTag("auto_play_switch")
+                                )
+                            }
+                        }
 
                         // Scan message chip
                         scanMessage?.let { msg ->

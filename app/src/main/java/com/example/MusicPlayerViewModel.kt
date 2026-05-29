@@ -43,6 +43,13 @@ class MusicPlayerViewModel : ViewModel() {
     private val _scanMessage = MutableStateFlow<String?>(null)
     val scanMessage: StateFlow<String?> = _scanMessage.asStateFlow()
 
+    private var isAutoPlayPerformed = false
+    private val PREFS_NAME = "music_player_settings"
+    private val KEY_AUTO_PLAY = "auto_play_on_launch"
+
+    private val _isAutoPlayEnabled = MutableStateFlow(true)
+    val isAutoPlayEnabled: StateFlow<Boolean> = _isAutoPlayEnabled.asStateFlow()
+
     private var mediaPlayer: MediaPlayer? = null
     private var progressJob: Job? = null
 
@@ -51,7 +58,16 @@ class MusicPlayerViewModel : ViewModel() {
         mediaPlayer = MediaPlayer()
     }
 
+    fun setAutoPlayEnabled(context: Context, enabled: Boolean) {
+        _isAutoPlayEnabled.value = enabled
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_AUTO_PLAY, enabled).apply()
+    }
+
     fun scanSongs(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        _isAutoPlayEnabled.value = prefs.getBoolean(KEY_AUTO_PLAY, true)
+
         if (_isScanning.value) return
         _isScanning.value = true
         _scanMessage.value = "Yaddaş skan edilir..."
@@ -117,6 +133,11 @@ class MusicPlayerViewModel : ViewModel() {
                     _scanMessage.value = "Telefon yaddaşında MP3 tapılmadı. Sınaq üçün nümunə mahnı yarada bilərsiniz!"
                 } else {
                     _scanMessage.value = "${list.size} mahnı tapıldı və siyahıya əlavə edildi."
+                    if (_isAutoPlayEnabled.value && !isAutoPlayPerformed && _currentSong.value == null) {
+                        isAutoPlayPerformed = true
+                        val randomSong = list.random()
+                        playSong(context, randomSong)
+                    }
                 }
             }
         }
