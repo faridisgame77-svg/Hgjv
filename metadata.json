@@ -1,0 +1,6 @@
+{
+  "name": "Musiqi Pleyeri",
+  "description": "Sadə, klassik və sürətli musiqi pleyeri. Telefondakı bütün MP3 fayllarını skan edir və avtomatik sırayla ifa edir.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
