@@ -135,6 +135,7 @@ fun MusicPlayerScreen(
     val favorites by viewModel.favorites.collectAsState()
     val soundPreset by viewModel.soundPreset.collectAsState()
     val visualizerStyle by viewModel.visualizerStyle.collectAsState()
+    val selectedLanguage by viewModel.selectedLanguage.collectAsState()
 
     var activeTab by remember { mutableStateOf("library") }
     var searchQuery by remember { mutableStateOf("") }
@@ -158,7 +159,7 @@ fun MusicPlayerScreen(
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = { 
-                        // Trigger interactive Easter Egg or quick stats message
+                        // Trigger interactive scan / info
                         viewModel.scanSongs(context)
                     }) {
                         Icon(
@@ -171,9 +172,9 @@ fun MusicPlayerScreen(
                 title = {
                     Text(
                         text = when (activeTab) {
-                            "library" -> "Musiqi Kitabxanası"
-                            "folders" -> "Pleylistlər və Qovluqlar"
-                            else -> "Tənzimləmələr"
+                            "library" -> LanguageManager.get("tab_library", selectedLanguage)
+                            "folders" -> LanguageManager.get("smart_categories", selectedLanguage)
+                            else -> LanguageManager.get("tab_settings", selectedLanguage)
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -251,7 +252,8 @@ fun MusicPlayerScreen(
                 SophisticatedBottomNavigation(
                     activeTab = activeTab,
                     onTabSelect = { activeTab = it },
-                    primaryColor = primaryColor
+                    primaryColor = primaryColor,
+                    selectedLang = selectedLanguage
                 )
             }
         },
@@ -277,7 +279,7 @@ fun MusicPlayerScreen(
                                 CircularProgressIndicator(color = primaryColor)
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "Mahnı faylları skan olunur...",
+                                    text = LanguageManager.get("song_scanned", selectedLanguage),
                                     color = Color.White.copy(alpha = 0.7f)
                                 )
                             }
@@ -302,7 +304,12 @@ fun MusicPlayerScreen(
                                 onSearchQueryChange = { searchQuery = it },
                                 primaryColor = primaryColor,
                                 context = context,
-                                viewModel = viewModel
+                                viewModel = viewModel,
+                                selectedLang = selectedLanguage,
+                                onSongClick = { song ->
+                                    viewModel.playSong(context, song)
+                                    isPlayerExpanded = true
+                                }
                             )
                         }
                         "folders" -> {
@@ -312,7 +319,12 @@ fun MusicPlayerScreen(
                                 currentSong = currentSong,
                                 context = context,
                                 viewModel = viewModel,
-                                primaryColor = primaryColor
+                                primaryColor = primaryColor,
+                                selectedLang = selectedLanguage,
+                                onSongClick = { song ->
+                                    viewModel.playSong(context, song)
+                                    isPlayerExpanded = true
+                                }
                             )
                         }
                         "settings" -> {
@@ -322,7 +334,8 @@ fun MusicPlayerScreen(
                                 primaryColor = primaryColor,
                                 themeAccent = themeAccent,
                                 soundPreset = soundPreset,
-                                visualizerStyle = visualizerStyle
+                                visualizerStyle = visualizerStyle,
+                                selectedLang = selectedLanguage
                             )
                         }
                     }
@@ -352,7 +365,9 @@ fun MusicPlayerScreen(
                         glowColor = glowColor,
                         bgGradientTop = bgGradientTop,
                         bgGradientBottom = bgGradientBottom,
-                        onClose = { isPlayerExpanded = false }
+                        selectedLang = selectedLanguage,
+                        onClose = { isPlayerExpanded = false },
+                        onGoHome = { activeTab = "library" }
                     )
                 }
             }
@@ -948,7 +963,8 @@ fun PlayerMiniPanel(
 fun SophisticatedBottomNavigation(
     activeTab: String,
     onTabSelect: (String) -> Unit,
-    primaryColor: Color
+    primaryColor: Color,
+    selectedLang: String
 ) {
     Surface(
         color = Color(0xFF14131A),
@@ -966,7 +982,7 @@ fun SophisticatedBottomNavigation(
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Tab 1: Musiqi
+            // Tab 1: Musiqi / Library
             val tab1Active = activeTab == "library"
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -985,20 +1001,20 @@ fun SophisticatedBottomNavigation(
                 ) {
                     Icon(
                         imageVector = Icons.Default.MusicNote,
-                        contentDescription = "Musiqi",
+                        contentDescription = LanguageManager.get("tab_library", selectedLang),
                         tint = if (tab1Active) primaryColor else Color.White.copy(alpha = 0.5f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
                 Text(
-                    text = "Musiqi",
+                    text = LanguageManager.get("tab_library", selectedLang),
                     fontSize = 11.sp,
                     fontWeight = if (tab1Active) FontWeight.Bold else FontWeight.Medium,
                     color = if (tab1Active) primaryColor else Color.White.copy(alpha = 0.5f)
                 )
             }
 
-            // Tab 2: Qovluqlar
+            // Tab 2: Qovluqlar / Discover
             val tab2Active = activeTab == "folders"
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -1017,20 +1033,20 @@ fun SophisticatedBottomNavigation(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Folder,
-                        contentDescription = "Qovluqlar",
+                        contentDescription = LanguageManager.get("tab_categories", selectedLang),
                         tint = if (tab2Active) primaryColor else Color.White.copy(alpha = 0.5f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
                 Text(
-                    text = "Qovluqlar",
+                    text = LanguageManager.get("tab_categories", selectedLang),
                     fontSize = 11.sp,
                     fontWeight = if (tab2Active) FontWeight.Bold else FontWeight.Medium,
                     color = if (tab2Active) primaryColor else Color.White.copy(alpha = 0.5f)
                 )
             }
 
-            // Tab 3: Ayarlar
+            // Tab 3: Ayarlar / Settings
             val tab3Active = activeTab == "settings"
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -1049,13 +1065,13 @@ fun SophisticatedBottomNavigation(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "Ayarlar",
+                        contentDescription = LanguageManager.get("tab_settings", selectedLang),
                         tint = if (tab3Active) primaryColor else Color.White.copy(alpha = 0.5f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
                 Text(
-                    text = "Ayarlar",
+                    text = LanguageManager.get("tab_settings", selectedLang),
                     fontSize = 11.sp,
                     fontWeight = if (tab3Active) FontWeight.Bold else FontWeight.Medium,
                     color = if (tab3Active) primaryColor else Color.White.copy(alpha = 0.5f)
@@ -1079,7 +1095,9 @@ fun LibraryTabContent(
     onSearchQueryChange: (String) -> Unit,
     primaryColor: Color,
     context: Context,
-    viewModel: MusicPlayerViewModel
+    viewModel: MusicPlayerViewModel,
+    selectedLang: String,
+    onSongClick: (Song) -> Unit
 ) {
     val filteredSongs = remember(songs, searchQuery) {
         songs.filter {
@@ -1093,7 +1111,7 @@ fun LibraryTabContent(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchQueryChange,
-            placeholder = { Text("Mahnı və ya ifaçı axtar...", color = Color.White.copy(alpha = 0.4f)) },
+            placeholder = { Text(LanguageManager.get("search_hint", selectedLang), color = Color.White.copy(alpha = 0.4f)) },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = primaryColor) },
             trailingIcon = if (searchQuery.isNotEmpty()) {
                 {
@@ -1126,7 +1144,7 @@ fun LibraryTabContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "BÜTÜN MAHNILAR (${filteredSongs.size})",
+                text = "${LanguageManager.get("all_songs", selectedLang)} (${filteredSongs.size})",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = primaryColor,
@@ -1143,7 +1161,7 @@ fun LibraryTabContent(
                     .padding(horizontal = 6.dp, vertical = 4.dp)
             ) {
                 Text(
-                    text = "Girişdə ifa et",
+                    text = LanguageManager.get("play_on_startup", selectedLang),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White.copy(alpha = 0.6f)
@@ -1204,7 +1222,7 @@ fun LibraryTabContent(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (searchQuery.isNotEmpty()) "Axtarışa uyğun musiqi tapılmadı." else "Yüklənmiş mahnı yoxdur.",
+                    text = if (searchQuery.isNotEmpty()) LanguageManager.get("searching_failed", selectedLang) else LanguageManager.get("no_songs", selectedLang),
                     color = Color.White.copy(alpha = 0.4f),
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center
@@ -1224,7 +1242,7 @@ fun LibraryTabContent(
                         index = index,
                         isActive = song.id == currentSong?.id,
                         isPlaying = isPlaying && song.id == currentSong?.id,
-                        onPlay = { viewModel.playSong(context, song) }
+                        onPlay = { onSongClick(song) }
                     )
                 }
             }
@@ -1242,7 +1260,9 @@ fun FoldersTabContent(
     currentSong: Song?,
     context: Context,
     viewModel: MusicPlayerViewModel,
-    primaryColor: Color
+    primaryColor: Color,
+    selectedLang: String,
+    onSongClick: (Song) -> Unit
 ) {
     val isPlaying by viewModel.isPlaying.collectAsState()
     var showOnlyFavoritesList by remember { mutableStateOf(false) }
@@ -1255,14 +1275,7 @@ fun FoldersTabContent(
     val totalSizeMB = remember(songs) {
         val bytes = songs.sumOf { it.size }
         val mb = bytes.toDouble() / (1024 * 1024)
-        if (mb > 0) String.format("%.1f MB", mb) else "12.4 MB (Nümunə)"
-    }
-
-    val totalDurationFormatted = remember(songs) {
-        val totalSecs = songs.sumOf { it.duration } / 1000
-        val mins = totalSecs / 60
-        val secs = totalSecs % 60
-        String.format("%02d:02d dəq", mins)
+        if (mb > 0) String.format("%.1f MB", mb) else "12.4 MB"
     }
 
     Column(
@@ -1279,11 +1292,11 @@ fun FoldersTabContent(
                     .padding(bottom = 12.dp)
             ) {
                 IconButton(onClick = { showOnlyFavoritesList = false }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Geri", tint = primaryColor)
+                    Icon(Icons.Default.ArrowBack, contentDescription = LanguageManager.get("back_button", selectedLang), tint = primaryColor)
                 }
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Mənim Sevimli Ritmlərim",
+                    text = LanguageManager.get("fav_rhythms", selectedLang),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -1298,7 +1311,7 @@ fun FoldersTabContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Sevimlilər siyahınız boşdur.\nMahnı pleyerindəki ürək düyməsinə basaraq mahnıları bura əlavə edə bilərsiniz!",
+                        text = LanguageManager.get("fav_empty", selectedLang),
                         textAlign = TextAlign.Center,
                         color = Color.White.copy(alpha = 0.4f),
                         fontSize = 13.sp,
@@ -1316,7 +1329,7 @@ fun FoldersTabContent(
                             index = index,
                             isActive = song.id == currentSong?.id,
                             isPlaying = isPlaying && song.id == currentSong?.id,
-                            onPlay = { viewModel.playSong(context, song) }
+                            onPlay = { onSongClick(song) }
                         )
                     }
                 }
@@ -1324,7 +1337,7 @@ fun FoldersTabContent(
         } else {
             // General Folder and Playlists dashboard
             Text(
-                text = "SMART KATEQORİYALAR",
+                text = LanguageManager.get("smart_categories", selectedLang),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = primaryColor,
@@ -1380,13 +1393,13 @@ fun FoldersTabContent(
                             }
                             Column {
                                 Text(
-                                    text = "Sevimlilər",
+                                    text = LanguageManager.get("favorites", selectedLang),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
                                 Text(
-                                    text = "${favorites.size} mahnı",
+                                    text = "${favorites.size} " + LanguageManager.get("tracks", selectedLang),
                                     fontSize = 11.sp,
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
@@ -1405,7 +1418,7 @@ fun FoldersTabContent(
                         .clickable {
                             val synthSong = songs.firstOrNull { it.isDemo }
                             if (synthSong != null) {
-                                viewModel.playSong(context, synthSong)
+                                onSongClick(synthSong)
                             }
                         }
                 ) {
@@ -1437,7 +1450,7 @@ fun FoldersTabContent(
                                 color = Color.White
                             )
                             Text(
-                                text = "${songs.count { it.isDemo }} sintez lent",
+                                text = "${songs.count { it.isDemo }} " + LanguageManager.get("tracks", selectedLang),
                                 fontSize = 11.sp,
                                 color = Color.White.copy(alpha = 0.5f)
                             )
@@ -1449,7 +1462,7 @@ fun FoldersTabContent(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "CİHAZDAN SKAN EDİLMİŞ QOVLUQLAR",
+                text = LanguageManager.get("folders_title", selectedLang),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = primaryColor,
@@ -1473,13 +1486,13 @@ fun FoldersTabContent(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "sdcard/Music/MusiqiPleyeri",
+                                text = "sdcard/Music",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                             Text(
-                                text = "Skan zamanı təyin olunmuş əsas yol",
+                                text = LanguageManager.get("folders_desc", selectedLang),
                                 fontSize = 10.sp,
                                 color = Color.White.copy(alpha = 0.5f)
                             )
@@ -1491,7 +1504,7 @@ fun FoldersTabContent(
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = "AKTİV",
+                                text = LanguageManager.get("active_status", selectedLang),
                                 fontSize = 8.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = primaryColor
@@ -1504,7 +1517,7 @@ fun FoldersTabContent(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "KİTABXANA STATİSTİKALARI",
+                text = LanguageManager.get("stats_title", selectedLang),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = primaryColor,
@@ -1528,8 +1541,8 @@ fun FoldersTabContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Bütün lentlərin sayı:", fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
-                        Text("${songs.size} fayl", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(LanguageManager.get("stats_count_label", selectedLang), fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
+                        Text("${songs.size} " + LanguageManager.get("tracks", selectedLang), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                     Divider(color = Color.White.copy(alpha = 0.05f), thickness = 1.dp)
                     Row(
@@ -1537,17 +1550,8 @@ fun FoldersTabContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Kitabxananın ümumi həcmi:", fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
+                        Text(LanguageManager.get("stats_size_label", selectedLang), fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
                         Text(totalSizeMB, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                    Divider(color = Color.White.copy(alpha = 0.05f), thickness = 1.dp)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Sintezlənmiş səs tezliyi:", fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f))
-                        Text("11.025 kHz (Classic Retro)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = primaryColor)
                     }
                 }
             }
@@ -1565,7 +1569,8 @@ fun SettingsTabContent(
     primaryColor: Color,
     themeAccent: String,
     soundPreset: String,
-    visualizerStyle: String
+    visualizerStyle: String,
+    selectedLang: String
 ) {
     var showEasterEgg by remember { mutableStateOf(false) }
 
@@ -1574,10 +1579,59 @@ fun SettingsTabContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.fillMaxSize()
     ) {
+        // System Language Selector
+        item {
+            Text(
+                text = LanguageManager.get("lang_select", selectedLang).uppercase(),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = primaryColor,
+                letterSpacing = 1.3.sp,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf(
+                    "AZ" to "AZ",
+                    "EN" to "EN",
+                    "TR" to "TR",
+                    "RU" to "RU"
+                ).forEach { (langCode, label) ->
+                    val isSelected = langCode == selectedLang
+                    Surface(
+                        color = if (isSelected) primaryColor.copy(alpha = 0.15f) else Color(0xFF1E1C24).copy(alpha = 0.6f),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = if (isSelected) 1.5.dp else 1.dp,
+                            color = if (isSelected) primaryColor else Color.White.copy(alpha = 0.08f)
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { viewModel.setSelectedLanguage(context, langCode) }
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) primaryColor else Color.White.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Dynamic Neon Theme Selection
         item {
             Text(
-                text = "PREMİUM DIZAYN MÖVZULARI",
+                text = LanguageManager.get("theme_selection", selectedLang).uppercase(),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = primaryColor,
@@ -1618,7 +1672,7 @@ fun SettingsTabContent(
                                     .size(14.dp)
                                     .clip(CircleShape)
                                     .background(col)
-                            )
+                             )
                             Text(
                                 text = name,
                                 fontSize = 10.sp,
@@ -1634,7 +1688,7 @@ fun SettingsTabContent(
         // DSP Equalizer simulation setup
         item {
             Text(
-                text = "SƏS COCO EFFEKTLƏRİ (DSP EQ)",
+                text = LanguageManager.get("effects_title", selectedLang).uppercase(),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = primaryColor,
@@ -1650,12 +1704,12 @@ fun SettingsTabContent(
             ) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     listOf(
-                        "Normal" to "Standart qüsursuz səs balansı",
-                        "Bas Gücləndirici" to "Aşağı tezliklərin (bas) dinamik artırılması",
-                        "Spatial 3D Səhnə" to "Geniş və 3D akustik studiya simulyasiyası",
-                        "Vokal Təmiz" to "Danışıq və vokal detallarının aydınlaşdırılması",
-                        "Retro 8-Bit" to "Tezliyin 8-bit retro oyun mühitinə uyğunlaşdırılması"
-                    ).forEach { (preset, desc) ->
+                        "Normal" to "preset_normal_desc",
+                        "Bas Gücləndirici" to "preset_bass_desc",
+                        "Spatial 3D Səhnə" to "preset_spatial_desc",
+                        "Vokal Təmiz" to "preset_vocal_desc",
+                        "Retro 8-Bit" to "preset_retro_desc"
+                    ).forEach { (preset, descKey) ->
                         val isSelected = preset == soundPreset
                         Row(
                             modifier = Modifier
@@ -1675,13 +1729,19 @@ fun SettingsTabContent(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = preset,
+                                    text = when (preset) {
+                                        "Normal" -> LanguageManager.get("preset_normal", selectedLang)
+                                        "Bas Gücləndirici" -> LanguageManager.get("preset_bass", selectedLang)
+                                        "Spatial 3D Səhnə" -> LanguageManager.get("preset_spatial", selectedLang)
+                                        "Vokal Təmiz" -> LanguageManager.get("preset_vocal", selectedLang)
+                                        else -> LanguageManager.get("preset_retro", selectedLang)
+                                    },
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (isSelected) primaryColor else Color.White
                                 )
                                 Text(
-                                    text = desc,
+                                    text = LanguageManager.get(descKey, selectedLang),
                                     fontSize = 10.sp,
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
@@ -1695,7 +1755,7 @@ fun SettingsTabContent(
         // Custom Visualizer Styles Setup
         item {
             Text(
-                text = "PLEYERİN VİZUALİZATOR TƏRZİ",
+                text = LanguageManager.get("visualizer_title", selectedLang).uppercase(),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = primaryColor,
@@ -1726,10 +1786,10 @@ fun SettingsTabContent(
                         ) {
                             Text(
                                 text = when (style) {
-                                    "Glow Pillars" -> "Pillələr"
-                                    "Dynamic Waves" -> "Dalğalar"
-                                    "Oscilloscope" -> "Lazer"
-                                    else -> "Kürələr"
+                                    "Glow Pillars" -> LanguageManager.get("visualizer_pillars", selectedLang)
+                                    "Dynamic Waves" -> LanguageManager.get("visualizer_waves", selectedLang)
+                                    "Oscilloscope" -> LanguageManager.get("visualizer_lazer", selectedLang)
+                                    else -> LanguageManager.get("visualizer_spheres", selectedLang)
                                 },
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
@@ -1742,10 +1802,10 @@ fun SettingsTabContent(
             }
         }
 
-        // About Application with Azerbaijan style resume element
+        // About Application with localization
         item {
             Text(
-                text = "TƏRTİBATÇI",
+                text = LanguageManager.get("developer_title", selectedLang).uppercase(),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = primaryColor,
@@ -1764,7 +1824,6 @@ fun SettingsTabContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Profile Avatar with dynamic gradient glow
                     Box(
                         modifier = Modifier
                             .size(72.dp)
@@ -1790,21 +1849,21 @@ fun SettingsTabContent(
                     }
 
                     Text(
-                        text = "Music Developer",
+                        text = LanguageManager.get("dev_subtitle", selectedLang),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
 
                     Text(
-                        text = "Təmiz səs, nostalji estetika və qüsursuz istifadəçi təcrübəsi üçün yaradılmış bənzərsiz premium audio tətbiq.",
+                        text = LanguageManager.get("dev_desc", selectedLang),
                         fontSize = 11.sp,
                         color = Color.White.copy(alpha = 0.6f),
                         textAlign = TextAlign.Center,
-                        lineHeight = 16.sp
+                        lineHeight = 15.sp
                     )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     Button(
                         onClick = { showEasterEgg = true },
@@ -1812,7 +1871,7 @@ fun SettingsTabContent(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Tətbiq Haqqında (Easter Egg)", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(LanguageManager.get("about_app", selectedLang), color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
             }
@@ -1820,15 +1879,15 @@ fun SettingsTabContent(
     }
 
     if (showEasterEgg) {
-        EasterEggDialog(onDismiss = { showEasterEgg = false }, primaryColor = primaryColor)
+        EasterEggDialog(onDismiss = { showEasterEgg = false }, primaryColor = primaryColor, selectedLang = selectedLang)
     }
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
-// GORGEOUS LUXURIOUS EASTER EGG DIALOG FOR AZERBAIJAN USERS
+// GORGEOUS LUXURIOUS EASTER EGG DIALOG WITH LOCALIZATION
 // ────────────────────────────────────────────────────────────────────────────────
 @Composable
-fun EasterEggDialog(onDismiss: () -> Unit, primaryColor: Color) {
+fun EasterEggDialog(onDismiss: () -> Unit, primaryColor: Color, selectedLang: String) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
@@ -1836,7 +1895,7 @@ fun EasterEggDialog(onDismiss: () -> Unit, primaryColor: Color) {
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
             ) {
-                Text("Anladım, Super!", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(LanguageManager.get("got_it", selectedLang), color = Color.Black, fontWeight = FontWeight.Bold)
             }
         },
         containerColor = Color(0xFF131218),
@@ -1847,7 +1906,7 @@ fun EasterEggDialog(onDismiss: () -> Unit, primaryColor: Color) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(Icons.Default.Celebration, contentDescription = null, tint = primaryColor)
-                Text("Sintezator Sirləri!", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(LanguageManager.get("about_overlay_title", selectedLang), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
         },
         text = {
@@ -1870,8 +1929,7 @@ fun EasterEggDialog(onDismiss: () -> Unit, primaryColor: Color) {
                 )
 
                 Text(
-                    text = "Bu tətbiqdəki test mahnıları proqram tərəfindən riyazi alqoritmlər vasitəsilə dərhal sintez edilir! " +
-                           "Hər bir səs dalğası (Sine, Triangle və Square modullaşdırılması) 11.025 kHz tezlik hissəcikləri ilə 16-bitlik retro PCM formatında yaradılır və pleyer tərəfindən real vaxtda oxunur. Heç bir internet tələb edilmir!",
+                    text = LanguageManager.get("about_dialog_body", selectedLang),
                     fontSize = 12.sp,
                     color = Color.White.copy(alpha = 0.8f),
                     lineHeight = 18.sp,
@@ -1896,7 +1954,9 @@ fun FullScreenPlayerOverlay(
     glowColor: Color,
     bgGradientTop: Color,
     bgGradientBottom: Color,
-    onClose: () -> Unit
+    selectedLang: String,
+    onClose: () -> Unit,
+    onGoHome: () -> Unit
 ) {
     val context = LocalContext.current
     val favorites by viewModel.favorites.collectAsState()
@@ -1973,19 +2033,30 @@ fun FullScreenPlayerOverlay(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Yığcamlaşdır", tint = Color.White, modifier = Modifier.size(28.dp))
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = LanguageManager.get("back_button", selectedLang),
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
                     Text(
-                        text = "İndi Oynadılır".uppercase(),
+                        text = LanguageManager.get("now_playing", selectedLang).uppercase(),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White.copy(alpha = 0.5f),
                         letterSpacing = 1.6.sp
                     )
                     IconButton(onClick = {
-                        // Quick details alert helper
+                        onGoHome()
+                        onClose()
                     }) {
-                        Icon(Icons.Default.Info, contentDescription = "Məlumat", tint = primaryColor)
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = LanguageManager.get("home_button", selectedLang),
+                            tint = primaryColor,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
 

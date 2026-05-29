@@ -50,6 +50,7 @@ class MusicPlayerViewModel : ViewModel() {
     private val KEY_SOUND_PRESET = "selected_sound_preset"
     private val KEY_VISUALIZER_STYLE = "selected_visualizer_style"
     private val KEY_THEME = "selected_theme_accent"
+    private val KEY_LANGUAGE = "selected_system_language"
 
     private val _isAutoPlayEnabled = MutableStateFlow(true)
     val isAutoPlayEnabled: StateFlow<Boolean> = _isAutoPlayEnabled.asStateFlow()
@@ -66,12 +67,21 @@ class MusicPlayerViewModel : ViewModel() {
     private val _accentColorTheme = MutableStateFlow("Aura")
     val accentColorTheme: StateFlow<String> = _accentColorTheme.asStateFlow()
 
+    private val _selectedLanguage = MutableStateFlow("AZ")
+    val selectedLanguage: StateFlow<String> = _selectedLanguage.asStateFlow()
+
     private var mediaPlayer: MediaPlayer? = null
     private var progressJob: Job? = null
 
     init {
         // Initialize simple clean MediaPlayer
         mediaPlayer = MediaPlayer()
+    }
+
+    fun setSelectedLanguage(context: Context, langCode: String) {
+        _selectedLanguage.value = langCode
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_LANGUAGE, langCode).apply()
     }
 
     fun setAutoPlayEnabled(context: Context, enabled: Boolean) {
@@ -118,14 +128,15 @@ class MusicPlayerViewModel : ViewModel() {
         val savedFavs = prefs.getStringSet(KEY_FAVORITES, emptySet()) ?: emptySet()
         _favorites.value = savedFavs.mapNotNull { it.toLongOrNull() }.toSet()
 
-        // Load premium sound presets, visualizer styles, and dynamic themes
+        // Load premium sound presets, visualizer styles, dynamic themes, and language
         _soundPreset.value = prefs.getString(KEY_SOUND_PRESET, "Normal") ?: "Normal"
         _visualizerStyle.value = prefs.getString(KEY_VISUALIZER_STYLE, "Glow Pillars") ?: "Glow Pillars"
         _accentColorTheme.value = prefs.getString(KEY_THEME, "Aura") ?: "Aura"
+        _selectedLanguage.value = prefs.getString(KEY_LANGUAGE, "AZ") ?: "AZ"
 
         if (_isScanning.value) return
         _isScanning.value = true
-        _scanMessage.value = "Yaddaş skan edilir..."
+        _scanMessage.value = LanguageManager.get("scanning_storage", _selectedLanguage.value)
 
         viewModelScope.launch(Dispatchers.IO) {
             val list = mutableListOf<Song>()
@@ -153,9 +164,9 @@ class MusicPlayerViewModel : ViewModel() {
 
                     while (cursor.moveToNext()) {
                         val id = cursor.getLong(idCol)
-                        val title = cursor.getString(titleCol) ?: "Naməlum Mahnı"
-                        val artist = cursor.getString(artistCol) ?: "<Naməlum İfaçı>"
-                        val album = cursor.getString(albumCol) ?: "Naməlum Albom"
+                        val title = cursor.getString(titleCol) ?: LanguageManager.get("unknown_song", _selectedLanguage.value)
+                        val artist = cursor.getString(artistCol) ?: LanguageManager.get("unknown_artist", _selectedLanguage.value)
+                        val album = cursor.getString(albumCol) ?: LanguageManager.get("unknown_album", _selectedLanguage.value)
                         val duration = cursor.getLong(durationCol)
                         val size = cursor.getLong(sizeCol)
                         val songUri = Uri.withAppendedPath(uri, id.toString())
@@ -185,9 +196,10 @@ class MusicPlayerViewModel : ViewModel() {
                 _songs.value = list
                 _isScanning.value = false
                 if (list.isEmpty()) {
-                    _scanMessage.value = "Telefon yaddaşında MP3 tapılmadı. Sınaq üçün nümunə mahnı yarada bilərsiniz!"
+                    _scanMessage.value = LanguageManager.get("no_songs_desc", _selectedLanguage.value)
                 } else {
-                    _scanMessage.value = "${list.size} mahnı tapıldı və siyahıya əlavə edildi."
+                    val compMsg = LanguageManager.get("scanning_completed", _selectedLanguage.value)
+                    _scanMessage.value = "${list.size} $compMsg"
                     if (_isAutoPlayEnabled.value && !isAutoPlayPerformed && _currentSong.value == null) {
                         isAutoPlayPerformed = true
                         val randomSong = list.random()
