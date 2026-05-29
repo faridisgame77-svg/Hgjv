@@ -46,9 +46,25 @@ class MusicPlayerViewModel : ViewModel() {
     private var isAutoPlayPerformed = false
     private val PREFS_NAME = "music_player_settings"
     private val KEY_AUTO_PLAY = "auto_play_on_launch"
+    private val KEY_FAVORITES = "favorite_song_ids"
+    private val KEY_SOUND_PRESET = "selected_sound_preset"
+    private val KEY_VISUALIZER_STYLE = "selected_visualizer_style"
+    private val KEY_THEME = "selected_theme_accent"
 
     private val _isAutoPlayEnabled = MutableStateFlow(true)
     val isAutoPlayEnabled: StateFlow<Boolean> = _isAutoPlayEnabled.asStateFlow()
+
+    private val _favorites = MutableStateFlow<Set<Long>>(emptySet())
+    val favorites: StateFlow<Set<Long>> = _favorites.asStateFlow()
+
+    private val _soundPreset = MutableStateFlow("Normal")
+    val soundPreset: StateFlow<String> = _soundPreset.asStateFlow()
+
+    private val _visualizerStyle = MutableStateFlow("Glow Pillars")
+    val visualizerStyle: StateFlow<String> = _visualizerStyle.asStateFlow()
+
+    private val _accentColorTheme = MutableStateFlow("Aura")
+    val accentColorTheme: StateFlow<String> = _accentColorTheme.asStateFlow()
 
     private var mediaPlayer: MediaPlayer? = null
     private var progressJob: Job? = null
@@ -64,9 +80,48 @@ class MusicPlayerViewModel : ViewModel() {
         prefs.edit().putBoolean(KEY_AUTO_PLAY, enabled).apply()
     }
 
+    fun toggleFavorite(context: Context, songId: Long) {
+        val current = _favorites.value.toMutableSet()
+        if (current.contains(songId)) {
+            current.remove(songId)
+        } else {
+            current.add(songId)
+        }
+        _favorites.value = current
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putStringSet(KEY_FAVORITES, current.map { it.toString() }.toSet()).apply()
+    }
+
+    fun setSoundPreset(context: Context, preset: String) {
+        _soundPreset.value = preset
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_SOUND_PRESET, preset).apply()
+    }
+
+    fun setVisualizerStyle(context: Context, style: String) {
+        _visualizerStyle.value = style
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_VISUALIZER_STYLE, style).apply()
+    }
+
+    fun setAccentColorTheme(context: Context, theme: String) {
+        _accentColorTheme.value = theme
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_THEME, theme).apply()
+    }
+
     fun scanSongs(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         _isAutoPlayEnabled.value = prefs.getBoolean(KEY_AUTO_PLAY, true)
+        
+        // Load favorites
+        val savedFavs = prefs.getStringSet(KEY_FAVORITES, emptySet()) ?: emptySet()
+        _favorites.value = savedFavs.mapNotNull { it.toLongOrNull() }.toSet()
+
+        // Load premium sound presets, visualizer styles, and dynamic themes
+        _soundPreset.value = prefs.getString(KEY_SOUND_PRESET, "Normal") ?: "Normal"
+        _visualizerStyle.value = prefs.getString(KEY_VISUALIZER_STYLE, "Glow Pillars") ?: "Glow Pillars"
+        _accentColorTheme.value = prefs.getString(KEY_THEME, "Aura") ?: "Aura"
 
         if (_isScanning.value) return
         _isScanning.value = true
