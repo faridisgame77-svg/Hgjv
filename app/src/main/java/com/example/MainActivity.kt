@@ -22,6 +22,9 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -174,6 +177,7 @@ fun MusicPlayerScreen(
                         text = when (activeTab) {
                             "library" -> LanguageManager.get("tab_library", selectedLanguage)
                             "folders" -> LanguageManager.get("smart_categories", selectedLanguage)
+                            "airpods" -> LanguageManager.get("tab_airpods", selectedLanguage)
                             else -> LanguageManager.get("tab_settings", selectedLanguage)
                         },
                         style = MaterialTheme.typography.titleMedium,
@@ -335,6 +339,14 @@ fun MusicPlayerScreen(
                                 themeAccent = themeAccent,
                                 soundPreset = soundPreset,
                                 visualizerStyle = visualizerStyle,
+                                selectedLang = selectedLanguage
+                            )
+                        }
+                        "airpods" -> {
+                            AirPodsTabContent(
+                                context = context,
+                                viewModel = viewModel,
+                                primaryColor = primaryColor,
                                 selectedLang = selectedLanguage
                             )
                         }
@@ -986,17 +998,18 @@ fun SophisticatedBottomNavigation(
             val tab1Active = activeTab == "library"
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
+                    .weight(1f)
                     .clip(RoundedCornerShape(12.dp))
                     .clickable { onTabSelect("library") }
-                    .padding(vertical = 6.dp, horizontal = 12.dp)
+                    .padding(vertical = 4.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
                         .background(if (tab1Active) primaryColor.copy(alpha = 0.15f) else Color.Transparent)
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -1010,7 +1023,8 @@ fun SophisticatedBottomNavigation(
                     text = LanguageManager.get("tab_library", selectedLang),
                     fontSize = 11.sp,
                     fontWeight = if (tab1Active) FontWeight.Bold else FontWeight.Medium,
-                    color = if (tab1Active) primaryColor else Color.White.copy(alpha = 0.5f)
+                    color = if (tab1Active) primaryColor else Color.White.copy(alpha = 0.5f),
+                    maxLines = 1
                 )
             }
 
@@ -1018,17 +1032,18 @@ fun SophisticatedBottomNavigation(
             val tab2Active = activeTab == "folders"
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
+                    .weight(1f)
                     .clip(RoundedCornerShape(12.dp))
                     .clickable { onTabSelect("folders") }
-                    .padding(vertical = 6.dp, horizontal = 12.dp)
+                    .padding(vertical = 4.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
                         .background(if (tab2Active) primaryColor.copy(alpha = 0.15f) else Color.Transparent)
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -1042,25 +1057,61 @@ fun SophisticatedBottomNavigation(
                     text = LanguageManager.get("tab_categories", selectedLang),
                     fontSize = 11.sp,
                     fontWeight = if (tab2Active) FontWeight.Bold else FontWeight.Medium,
-                    color = if (tab2Active) primaryColor else Color.White.copy(alpha = 0.5f)
+                    color = if (tab2Active) primaryColor else Color.White.copy(alpha = 0.5f),
+                    maxLines = 1
                 )
             }
 
-            // Tab 3: Ayarlar / Settings
+            // Tab 3: AirPods
+            val tabAirPodsActive = activeTab == "airpods"
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onTabSelect("airpods") }
+                    .padding(vertical = 4.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(if (tabAirPodsActive) primaryColor.copy(alpha = 0.15f) else Color.Transparent)
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Headphones,
+                        contentDescription = LanguageManager.get("tab_airpods", selectedLang),
+                        tint = if (tabAirPodsActive) primaryColor else Color.White.copy(alpha = 0.5f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Text(
+                    text = LanguageManager.get("tab_airpods", selectedLang),
+                    fontSize = 11.sp,
+                    fontWeight = if (tabAirPodsActive) FontWeight.Bold else FontWeight.Medium,
+                    color = if (tabAirPodsActive) primaryColor else Color.White.copy(alpha = 0.5f),
+                    maxLines = 1
+                )
+            }
+
+            // Tab 4: Ayarlar / Settings
             val tab3Active = activeTab == "settings"
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
+                    .weight(1f)
                     .clip(RoundedCornerShape(12.dp))
                     .clickable { onTabSelect("settings") }
-                    .padding(vertical = 6.dp, horizontal = 12.dp)
+                    .padding(vertical = 4.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
                         .background(if (tab3Active) primaryColor.copy(alpha = 0.15f) else Color.Transparent)
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -1074,7 +1125,8 @@ fun SophisticatedBottomNavigation(
                     text = LanguageManager.get("tab_settings", selectedLang),
                     fontSize = 11.sp,
                     fontWeight = if (tab3Active) FontWeight.Bold else FontWeight.Medium,
-                    color = if (tab3Active) primaryColor else Color.White.copy(alpha = 0.5f)
+                    color = if (tab3Active) primaryColor else Color.White.copy(alpha = 0.5f),
+                    maxLines = 1
                 )
             }
         }
@@ -2586,5 +2638,682 @@ private fun getLyricsForSongAndProgress(title: String): List<LyricLine> {
             LyricLine(72f, 88f, "🎶 Bu musiqi səni xəyallar dünyasına aparacaq..."),
             LyricLine(88f, 100f, "✨ Ritm və xəyal əbədi birləşir...")
         )
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// PAGE 4: AIRPODS / BLUETOOTH CONTROL VIEW CONTRACTION WITH REAL CORES
+// ────────────────────────────────────────────────────────────────────────────────
+@Composable
+fun AirPodsTabContent(
+    context: Context,
+    viewModel: MusicPlayerViewModel,
+    primaryColor: Color,
+    selectedLang: String
+) {
+    val isRealBluetoothActive by viewModel.isBluetoothAudioActive.collectAsState()
+    val isSimulatedEnabled by viewModel.isAirPodsSimulatedEnabled.collectAsState()
+    val activeModel by viewModel.selectedAirPodsModel.collectAsState()
+    val leftBattery by viewModel.airpodsLeftBattery.collectAsState()
+    val rightBattery by viewModel.airpodsRightBattery.collectAsState()
+    val caseBattery by viewModel.airpodsCaseBattery.collectAsState()
+    val leftCharging by viewModel.airpodsLeftCharging.collectAsState()
+    val rightCharging by viewModel.airpodsRightCharging.collectAsState()
+    val caseCharging by viewModel.airpodsCaseCharging.collectAsState()
+    val noiseMode by viewModel.noiseCancellationMode.collectAsState()
+    val spatialMode by viewModel.spatialAudioMode.collectAsState()
+    val sysVolume by viewModel.systemVolume.collectAsState()
+    val songs by viewModel.songs.collectAsState()
+    val currentSong by viewModel.currentSong.collectAsState()
+    val isPlaying by viewModel.isPlaying.collectAsState()
+
+    // Poll actual states
+    LaunchedEffect(Unit) {
+        while (true) {
+            viewModel.checkBluetoothStatus(context)
+            viewModel.updateVolumeFromSystem(context)
+            kotlinx.coroutines.delay(1000)
+        }
+    }
+
+    val isActive = isRealBluetoothActive || isSimulatedEnabled
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Connection Header Block
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.03f)),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Pulsing glowing headphone visual or bluetooth
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                ) {
+                    val infiniteTransition = rememberInfiniteTransition()
+                    val haloAlpha by if (isActive) {
+                        infiniteTransition.animateFloat(
+                            initialValue = 0.1f,
+                            targetValue = 0.4f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(1200, easing = LinearEasing),
+                                repeatMode = RepeatMode.Reverse
+                            )
+                        )
+                    } else {
+                        remember { mutableStateOf(0.1f) }
+                    }
+
+                    // Halo outer connection state rings
+                    Box(
+                        modifier = Modifier
+                            .size(70.dp)
+                            .clip(CircleShape)
+                            .background(if (isActive) primaryColor.copy(alpha = haloAlpha) else Color.White.copy(alpha = 0.05f))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(if (isActive) primaryColor.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.08f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isActive) Icons.Default.Headphones else Icons.Default.Bluetooth,
+                            contentDescription = "Headphones Status",
+                            tint = if (isActive) primaryColor else Color.White.copy(alpha = 0.4f),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+
+                Text(
+                    text = if (isActive) activeModel else LanguageManager.get("tab_airpods", selectedLang),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    // Pulsing active green/gray dot
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(if (isActive) Color(0xFF00E676) else Color.White.copy(alpha = 0.4f))
+                    )
+                    Text(
+                        text = if (isActive) LanguageManager.get("connected", selectedLang) else LanguageManager.get("disconnected", selectedLang),
+                        fontSize = 12.sp,
+                        color = if (isActive) Color(0xFF00E676) else Color.White.copy(alpha = 0.5f),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Simulation Toggle (Testing sandbox helper)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.02f))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = LanguageManager.get("airpods_simulation", selectedLang),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = LanguageManager.get("airpods_sim_desc", selectedLang),
+                            fontSize = 9.sp,
+                            color = Color.White.copy(alpha = 0.5f)
+                        )
+                    }
+                    Switch(
+                        checked = isSimulatedEnabled,
+                        onCheckedChange = { viewModel.setAirPodsSimulationEnabled(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = primaryColor,
+                            checkedTrackColor = primaryColor.copy(alpha = 0.3f),
+                            uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
+                            uncheckedTrackColor = Color.White.copy(alpha = 0.1f)
+                        )
+                    )
+                }
+            }
+        }
+
+        if (isActive) {
+            // AirPods Model Selection Slider / Row
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.03f)),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = LanguageManager.get("airpods_model", selectedLang),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryColor,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    val models = listOf("AirPods Pro", "AirPods Max", "AirPods 3", "Sony WH-1000XM4")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        models.forEach { model ->
+                            val isSelected = activeModel == model
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isSelected) primaryColor.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.03f))
+                                    .border(1.dp, if (isSelected) primaryColor else Color.White.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+                                    .clickable { viewModel.setSelectedAirPodsModel(model) }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = model.split(" ").last(),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) primaryColor else Color.White.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // AirPods animated battery nodes
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.03f)),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        // Left node
+                        BatteryNode(
+                            label = LanguageManager.get("battery_l", selectedLang),
+                            percentage = leftBattery,
+                            isCharging = leftCharging,
+                            primaryColor = primaryColor
+                        )
+
+                        // Right node
+                        BatteryNode(
+                            label = LanguageManager.get("battery_r", selectedLang),
+                            percentage = rightBattery,
+                            isCharging = rightCharging,
+                            primaryColor = primaryColor
+                        )
+
+                        // Case node (only show if model supports case percentage)
+                        if (activeModel != "AirPods Max" && activeModel != "Sony WH-1000XM4") {
+                            BatteryNode(
+                                label = LanguageManager.get("battery_case", selectedLang),
+                                percentage = caseBattery,
+                                isCharging = caseCharging,
+                                primaryColor = primaryColor
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Controls to interact with charge simulation sandbox
+                    Text(
+                        text = "SANDBOX BATTERY SIMULATION CONTROLLER",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White.copy(alpha = 0.4f),
+                        letterSpacing = 0.5.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Randomizer
+                        Button(
+                            onClick = {
+                                val leftRand = (20..100).random()
+                                val rightRand = (20..100).random()
+                                val caseRand = (20..100).random()
+                                viewModel.setAirPodsBatteries(leftRand, rightRand, caseRand)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.05f)),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Randomize Values", fontSize = 11.sp, color = Color.White)
+                        }
+
+                        // Toggle Charging status
+                        Button(
+                            onClick = {
+                                viewModel.toggleAirPodsCharging(!leftCharging, !rightCharging, !caseCharging)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = primaryColor.copy(alpha = 0.15f)),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = if (leftCharging) "Unplug Case" else "Plug Case",
+                                fontSize = 11.sp,
+                                color = primaryColor,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Real System Volume Control with Slider and Speaker Icons
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.03f)),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = LanguageManager.get("volume", selectedLang),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryColor,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        IconButton(onClick = { viewModel.setSystemVolume(context, 0) }) {
+                            Icon(
+                                imageVector = if (sysVolume == 0) Icons.Default.VolumeMute else Icons.Default.VolumeDown,
+                                contentDescription = "Mute",
+                                tint = Color.White.copy(alpha = 0.6f)
+                            )
+                        }
+                        Slider(
+                            value = sysVolume.toFloat(),
+                            onValueChange = { viewModel.setSystemVolume(context, it.toInt()) },
+                            valueRange = 0f..100f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color.White,
+                                activeTrackColor = primaryColor,
+                                inactiveTrackColor = Color.White.copy(alpha = 0.15f)
+                            ),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "$sysVolume%",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.width(36.dp)
+                        )
+                    }
+                }
+            }
+
+            // Real compact player controls to guide physical playback from this tab
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.03f)),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    currentSong?.let { song ->
+                        Text(
+                            text = song.title,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = song.artist,
+                            fontSize = 11.sp,
+                            color = Color.White.copy(alpha = 0.5f),
+                            maxLines = 1
+                        )
+                    } ?: Text(
+                        text = LanguageManager.get("no_songs", selectedLang),
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.4f)
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = { viewModel.playPrevious(context) },
+                            enabled = songs.isNotEmpty()
+                        ) {
+                            Icon(Icons.Default.SkipPrevious, contentDescription = "Prev", tint = Color.White, modifier = Modifier.size(28.dp))
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(CircleShape)
+                                .background(primaryColor)
+                                .clickable { viewModel.togglePlayback(context) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = "PlayPause",
+                                tint = Color.Black,
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = { viewModel.playNext(context) },
+                            enabled = songs.isNotEmpty()
+                        ) {
+                            Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(28.dp))
+                        }
+                    }
+                }
+            }
+
+            // Elegant Noise cancellation mode segment control
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.03f)),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = LanguageManager.get("noise_control", selectedLang),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryColor,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    val modes = listOf(
+                        Triple("NoiseCancelling", LanguageManager.get("noise_cancelling", selectedLang), Icons.Default.GraphicEq),
+                        Triple("Transparency", LanguageManager.get("transparency", selectedLang), Icons.Default.VolumeUp),
+                        Triple("Off", LanguageManager.get("off", selectedLang), Icons.Default.VolumeOff)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        modes.forEach { (modeKey, modeTitle, icon) ->
+                            val isSelected = noiseMode == modeKey
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) primaryColor.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.02f))
+                                    .border(1.dp, if (isSelected) primaryColor else Color.White.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
+                                    .clickable { viewModel.setNoiseCancellationMode(modeKey) }
+                                    .padding(vertical = 12.dp, horizontal = 6.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = modeTitle,
+                                    tint = if (isSelected) primaryColor else Color.White.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = modeTitle.split(" ").last(),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) primaryColor else Color.White.copy(alpha = 0.6f),
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // AirPods Spatial Audio block
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.03f)),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = LanguageManager.get("spatial_audio", selectedLang),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryColor,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    
+                    val spatialOptions = listOf(
+                        "Off" to LanguageManager.get("off", selectedLang),
+                        "Fixed" to LanguageManager.get("spatial_fixed", selectedLang),
+                        "HeadTracked" to LanguageManager.get("spatial_head", selectedLang)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        spatialOptions.forEach { (optionKey, optionLabel) ->
+                            val isSelected = spatialMode == optionKey
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isSelected) primaryColor.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.03f))
+                                    .border(1.dp, if (isSelected) primaryColor else Color.White.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+                                    .clickable { viewModel.setSpatialAudioMode(optionKey) }
+                                    .padding(vertical = 10.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = optionLabel,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) primaryColor else Color.White.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Find my AirPods feature! Play high acoustic sound
+            Button(
+                onClick = { viewModel.sendLocateBeep(context) },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252).copy(alpha = 0.15f)),
+                border = BorderStroke(1.dp, Color(0xFFFF5252).copy(alpha = 0.3f)),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(vertical = 4.dp)
+                ) {
+                    Icon(Icons.Default.LocationOn, contentDescription = "Find", tint = Color(0xFFFF5252))
+                    Text(
+                        text = LanguageManager.get("find_my_airpods", selectedLang),
+                        color = Color(0xFFFF5252),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
+            }
+        } else {
+            // Disconnected fallback screen state
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.02f)),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Bluetooth,
+                        contentDescription = "Bluetooth Disconnected",
+                        tint = Color.White.copy(alpha = 0.2f),
+                        modifier = Modifier.size(56.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = LanguageManager.get("disconnected", selectedLang),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (selectedLang == "AZ") "Zəhmət olmasa Bluetooth qulaqlıqlarınızı telefona qoşun və ya sınaq üçün yuxarıdakı simulyasiya rejimini aktivləşdirin."
+                        else if (selectedLang == "TR") "Lütfen Bluetooth kulaklığınızı telefona bağlayın veya denemek için yukarıdaki simülasyon modunu aktif edin."
+                        else if (selectedLang == "RU") "Пожалуйста, подключите беспроводные наушники по Bluetooth или переведите переключатель эмулятора выше."
+                        else "Please connect a Bluetooth headphone or switch on the simulated mode above to unlock battery tracking details.",
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.4f),
+                        textAlign = TextAlign.Center,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BatteryNode(
+    label: String,
+    percentage: Int,
+    isCharging: Boolean,
+    primaryColor: Color
+) {
+    Card(
+        modifier = Modifier
+            .width(100.dp)
+            .padding(4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.04f)),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(12.dp)
+        ) {
+            // Elegant Battery Container shape
+            Box(
+                modifier = Modifier
+                    .width(32.dp)
+                    .height(55.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.White.copy(alpha = 0.05f))
+                    .border(1.5.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                // Liquid battery progress level
+                val fillHeightFactor = percentage / 100f
+                val barColor = if (percentage < 20) Color(0xFFFF5252) else if (isCharging) Color(0xFF00E676) else primaryColor
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(fillHeightFactor)
+                        .clip(RoundedCornerShape(bottomStart = 6.dp, bottomEnd = 6.dp))
+                        .background(barColor)
+                )
+
+                // Flash overlay for charging
+                if (isCharging) {
+                    Icon(
+                        imageVector = Icons.Default.FlashOn,
+                        contentDescription = "Charging",
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(16.dp)
+                            .align(Alignment.Center)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "$percentage%",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = label,
+                fontSize = 10.sp,
+                color = Color.White.copy(alpha = 0.5f),
+                maxLines = 1,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }

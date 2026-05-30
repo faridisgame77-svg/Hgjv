@@ -70,12 +70,199 @@ class MusicPlayerViewModel : ViewModel() {
     private val _selectedLanguage = MutableStateFlow("AZ")
     val selectedLanguage: StateFlow<String> = _selectedLanguage.asStateFlow()
 
+    // ────────────────────────────────────────────────────────────────────────────────
+    // PREMIUM AIRPODS & BLUETOOTH INTEGRATION STATES (REAL & SIMULATED)
+    // ────────────────────────────────────────────────────────────────────────────────
+    private val _isBluetoothAudioActive = MutableStateFlow(false)
+    val isBluetoothAudioActive: StateFlow<Boolean> = _isBluetoothAudioActive.asStateFlow()
+
+    private val _isAirPodsSimulatedEnabled = MutableStateFlow(false)
+    val isAirPodsSimulatedEnabled: StateFlow<Boolean> = _isAirPodsSimulatedEnabled.asStateFlow()
+
+    private val _selectedAirPodsModel = MutableStateFlow("AirPods Pro")
+    val selectedAirPodsModel: StateFlow<String> = _selectedAirPodsModel.asStateFlow()
+
+    private val _airpodsLeftBattery = MutableStateFlow(88)
+    val airpodsLeftBattery: StateFlow<Int> = _airpodsLeftBattery.asStateFlow()
+
+    private val _airpodsRightBattery = MutableStateFlow(92)
+    val airpodsRightBattery: StateFlow<Int> = _airpodsRightBattery.asStateFlow()
+
+    private val _airpodsCaseBattery = MutableStateFlow(100)
+    val airpodsCaseBattery: StateFlow<Int> = _airpodsCaseBattery.asStateFlow()
+
+    private val _airpodsLeftCharging = MutableStateFlow(false)
+    val airpodsLeftCharging: StateFlow<Boolean> = _airpodsLeftCharging.asStateFlow()
+
+    private val _airpodsRightCharging = MutableStateFlow(false)
+    val airpodsRightCharging: StateFlow<Boolean> = _airpodsRightCharging.asStateFlow()
+
+    private val _airpodsCaseCharging = MutableStateFlow(true)
+    val airpodsCaseCharging: StateFlow<Boolean> = _airpodsCaseCharging.asStateFlow()
+
+    private val _noiseCancellationMode = MutableStateFlow("Transparency")
+    val noiseCancellationMode: StateFlow<String> = _noiseCancellationMode.asStateFlow()
+
+    private val _spatialAudioMode = MutableStateFlow("Fixed")
+    val spatialAudioMode: StateFlow<String> = _spatialAudioMode.asStateFlow()
+
+    private val _systemVolume = MutableStateFlow(70)
+    val systemVolume: StateFlow<Int> = _systemVolume.asStateFlow()
+
     private var mediaPlayer: MediaPlayer? = null
     private var progressJob: Job? = null
 
     init {
         // Initialize simple clean MediaPlayer
         mediaPlayer = MediaPlayer()
+    }
+
+    fun checkBluetoothStatus(context: Context) {
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? android.media.AudioManager
+        audioManager?.let { manager ->
+            @Suppress("DEPRECATION")
+            _isBluetoothAudioActive.value = manager.isBluetoothA2dpOn || manager.isBluetoothScoOn
+        }
+    }
+
+    fun setAirPodsSimulationEnabled(enabled: Boolean) {
+        _isAirPodsSimulatedEnabled.value = enabled
+    }
+
+    fun setSelectedAirPodsModel(model: String) {
+        _selectedAirPodsModel.value = model
+        // Change battery status to make the interaction feel organic and fun when Model changes
+        when (model) {
+            "AirPods Pro" -> {
+                _airpodsLeftBattery.value = 85
+                _airpodsRightBattery.value = 85
+                _airpodsCaseBattery.value = 95
+            }
+            "AirPods Max" -> {
+                _airpodsLeftBattery.value = 98
+                _airpodsRightBattery.value = 98
+                _airpodsCaseBattery.value = 0 // AirPods Max does not have a separate charging case percentage
+            }
+            "AirPods 3" -> {
+                _airpodsLeftBattery.value = 72
+                _airpodsRightBattery.value = 80
+                _airpodsCaseBattery.value = 45
+            }
+            "Sony WH-1000XM4" -> {
+                _airpodsLeftBattery.value = 90
+                _airpodsRightBattery.value = 90
+                _airpodsCaseBattery.value = 0
+            }
+        }
+    }
+
+    fun setAirPodsBatteries(left: Int, right: Int, case: Int) {
+        _airpodsLeftBattery.value = left.coerceIn(0, 100)
+        _airpodsRightBattery.value = right.coerceIn(0, 100)
+        _airpodsCaseBattery.value = case.coerceIn(0, 100)
+    }
+
+    fun toggleAirPodsCharging(left: Boolean, right: Boolean, case: Boolean) {
+        _airpodsLeftCharging.value = left
+        _airpodsRightCharging.value = right
+        _airpodsCaseCharging.value = case
+    }
+
+    fun setNoiseCancellationMode(mode: String) {
+        _noiseCancellationMode.value = mode
+    }
+
+    fun setSpatialAudioMode(mode: String) {
+        _spatialAudioMode.value = mode
+    }
+
+    fun updateVolumeFromSystem(context: Context) {
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? android.media.AudioManager
+        audioManager?.let { manager ->
+            val maxVol = manager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
+            val currentVol = manager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
+            if (maxVol > 0) {
+                _systemVolume.value = (currentVol * 100) / maxVol
+            }
+        }
+    }
+
+    fun setSystemVolume(context: Context, percentage: Int) {
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? android.media.AudioManager
+        audioManager?.let { manager ->
+            val maxVol = manager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
+            val target = (percentage * maxVol) / 100
+            try {
+                manager.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, target.coerceIn(0, maxVol), 0)
+                _systemVolume.value = percentage
+            } catch (e: Exception) {
+                Log.e("MusicPlayerVM", "Səs səviyyəsi təyin edilərkən xəta: ", e)
+                _systemVolume.value = percentage
+            }
+        }
+    }
+
+    fun sendLocateBeep(context: Context) {
+        // High quality sound chime alert to find AirPods
+        viewModelScope.launch(Dispatchers.IO) {
+            val sampleRate = 44100
+            val durationSeconds = 1
+            val numSamples = sampleRate * durationSeconds
+            val headerAndDataSize = 44 + numSamples * 2
+            val header = ByteArray(headerAndDataSize)
+            
+            // Standard WAV Header
+            header[0] = 'R'.code.toByte(); header[1] = 'I'.code.toByte(); header[2] = 'F'.code.toByte(); header[3] = 'F'.code.toByte()
+            val fileLen = headerAndDataSize - 8
+            header[4] = (fileLen and 0xff).toByte()
+            header[5] = ((fileLen shr 8) and 0xff).toByte()
+            header[6] = ((fileLen shr 16) and 0xff).toByte()
+            header[7] = ((fileLen shr 24) and 0xff).toByte()
+            header[8] = 'W'.code.toByte(); header[9] = 'A'.code.toByte(); header[10] = 'V'.code.toByte(); header[11] = 'E'.code.toByte()
+            header[12] = 'f'.code.toByte(); header[13] = 'm'.code.toByte(); header[14] = 't'.code.toByte(); header[15] = ' '.code.toByte()
+            header[16] = 16; header[17] = 0; header[18] = 0; header[19] = 0 // Chunk size 16
+            header[20] = 1; header[21] = 0 // PCM=1
+            header[22] = 1; header[23] = 0 // Mono=1
+            header[24] = (sampleRate and 0xff).toByte(); header[25] = ((sampleRate shr 8) and 0xff).toByte(); header[26] = ((sampleRate shr 16) and 0xff).toByte(); header[27] = ((sampleRate shr 24) and 0xff).toByte()
+            val byteRate = sampleRate * 2
+            header[28] = (byteRate and 0xff).toByte(); header[29] = ((byteRate shr 8) and 0xff).toByte(); header[30] = ((byteRate shr 16) and 0xff).toByte(); header[31] = ((byteRate shr 24) and 0xff).toByte()
+            header[32] = 2; header[33] = 0 // Block align
+            header[34] = 16; header[35] = 0 // Bits per sample
+            header[36] = 'd'.code.toByte(); header[37] = 'a'.code.toByte(); header[38] = 't'.code.toByte(); header[39] = 'a'.code.toByte()
+            val dataSize = numSamples * 2
+            header[40] = (dataSize and 0xff).toByte(); header[41] = ((dataSize shr 8) and 0xff).toByte(); header[42] = ((dataSize shr 16) and 0xff).toByte(); header[43] = ((dataSize shr 24) and 0xff).toByte()
+
+            // High frequency alert sinewave
+            val freq = 2000.0 // 2 kHz prominent beep
+            for (i in 0 until numSamples) {
+                val angle = 2.0 * Math.PI * freq * i / sampleRate
+                val rawValue = Math.sin(angle)
+                // fade out and in pulsating chime
+                val pulse = Math.sin(2.0 * Math.PI * 4.0 * i / sampleRate) // 4 Hz pulse
+                val sVal = (rawValue * (pulse + 1.0) * 0.4 * 32767.0).toInt().coerceIn(-32768, 32767)
+                val pos = 44 + i * 2
+                header[pos] = (sVal and 0xff).toByte()
+                header[pos + 1] = ((sVal shr 8) and 0xff).toByte()
+            }
+
+            withContext(Dispatchers.Main) {
+                try {
+                    val beepPlayer = MediaPlayer()
+                    val tempFile = File(context.cacheDir, "locate_beep.wav")
+                    tempFile.writeBytes(header)
+                    beepPlayer.setDataSource(context, Uri.fromFile(tempFile))
+                    beepPlayer.prepare()
+                    beepPlayer.start()
+                    // release after playback completes
+                    beepPlayer.setOnCompletionListener {
+                        it.release()
+                        try { tempFile.delete() } catch (ignored: Exception) {}
+                    }
+                } catch (e: Exception) {
+                    Log.e("MusicPlayerVM", "Beep səs fəaliyyətində xəta: ", e)
+                }
+            }
+        }
     }
 
     fun setSelectedLanguage(context: Context, langCode: String) {
