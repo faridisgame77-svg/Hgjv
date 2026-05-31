@@ -25,6 +25,88 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Style 1 Widget Receiver -->
+        <receiver
+            android:name=".MusicWidgetProvider1"
+            android:exported="false"
+            android:label="Aura Premium Widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.ACTION_WIDGET_PLAY_PAUSE" />
+                <action android:name="com.example.ACTION_WIDGET_NEXT" />
+                <action android:name="com.example.ACTION_WIDGET_PREV" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/music_widget_info1" />
+        </receiver>
+
+        <!-- Style 2 Widget Receiver -->
+        <receiver
+            android:name=".MusicWidgetProvider2"
+            android:exported="false"
+            android:label="Retro 8-Bit Widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.ACTION_WIDGET_PLAY_PAUSE" />
+                <action android:name="com.example.ACTION_WIDGET_NEXT" />
+                <action android:name="com.example.ACTION_WIDGET_PREV" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/music_widget_info2" />
+        </receiver>
+
+        <!-- Style 3 Widget Receiver -->
+        <receiver
+            android:name=".MusicWidgetProvider3"
+            android:exported="false"
+            android:label="Modern Full Controller">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.ACTION_WIDGET_PLAY_PAUSE" />
+                <action android:name="com.example.ACTION_WIDGET_NEXT" />
+                <action android:name="com.example.ACTION_WIDGET_PREV" />
+                <action android:name="com.example.ACTION_WIDGET_VOL_UP" />
+                <action android:name="com.example.ACTION_WIDGET_VOL_DOWN" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/music_widget_info3" />
+        </receiver>
+
+        <!-- Style 4 Widget Receiver -->
+        <receiver
+            android:name=".MusicWidgetProvider4"
+            android:exported="false"
+            android:label="AirPods Battery Monitor">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.ACTION_WIDGET_PLAY_PAUSE" />
+                <action android:name="com.example.ACTION_WIDGET_VOL_UP" />
+                <action android:name="com.example.ACTION_WIDGET_VOL_DOWN" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/music_widget_info4" />
+        </receiver>
+
+        <!-- Style 5 Widget Receiver -->
+        <receiver
+            android:name=".MusicWidgetProvider5"
+            android:exported="false"
+            android:label="Minimalist Circle Disc">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.ACTION_WIDGET_PLAY_PAUSE" />
+                <action android:name="com.example.ACTION_WIDGET_VOL_UP" />
+                <action android:name="com.example.ACTION_WIDGET_VOL_DOWN" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/music_widget_info5" />
+        </receiver>
     </application>
 
 </manifest>

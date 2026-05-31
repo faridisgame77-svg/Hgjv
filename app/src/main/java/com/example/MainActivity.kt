@@ -84,19 +84,30 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val widgetAction = intent?.getStringExtra("widget_action")
+        if (widgetAction != null) {
+            handleWidgetAction(widgetAction)
+            intent.removeExtra("widget_action")
+        }
+
         setContent {
             MyApplicationTheme {
                 val hasPermissionState by _permissionGranted.collectAsState()
+                var showSplash by remember { mutableStateOf(true) }
                 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MusicPlayerScreen(
-                        viewModel = viewModel,
-                        permissionGranted = hasPermissionState,
-                        onRequestPermission = { launchPermissionRequest() }
-                    )
+                    if (showSplash) {
+                        SplashScreenContent(onFinish = { showSplash = false })
+                    } else {
+                        MusicPlayerScreen(
+                            viewModel = viewModel,
+                            permissionGranted = hasPermissionState,
+                            onRequestPermission = { launchPermissionRequest() }
+                        )
+                    }
                 }
             }
         }
@@ -112,8 +123,189 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val widgetAction = intent.getStringExtra("widget_action")
+        if (widgetAction != null) {
+            handleWidgetAction(widgetAction)
+            intent.removeExtra("widget_action")
+        }
+    }
+
+    private fun handleWidgetAction(action: String) {
+        when (action) {
+            "com.example.ACTION_WIDGET_PLAY_PAUSE" -> viewModel.togglePlayback(this)
+            "com.example.ACTION_WIDGET_NEXT" -> viewModel.playNext(this)
+            "com.example.ACTION_WIDGET_PREV" -> viewModel.playPrevious(this)
+            "com.example.ACTION_WIDGET_VOL_UP" -> {
+                val curVol = viewModel.systemVolume.value
+                viewModel.setSystemVolume(this, (curVol + 10).coerceAtMost(100))
+            }
+            "com.example.ACTION_WIDGET_VOL_DOWN" -> {
+                val curVol = viewModel.systemVolume.value
+                viewModel.setSystemVolume(this, (curVol - 10).coerceAtLeast(0))
+            }
+        }
+    }
+
     private fun launchPermissionRequest() {
         permissionLauncher.launch(requiredPermission)
+    }
+}
+
+@Composable
+fun SplashScreenContent(onFinish: () -> Unit) {
+    var progress by remember { mutableStateOf(0f) }
+    
+    LaunchedEffect(Unit) {
+        val durationMs = 4200
+        val steps = 100
+        val delayPerStep = (durationMs / steps).toLong()
+        for (i in 0..steps) {
+            kotlinx.coroutines.delay(delayPerStep)
+            progress = i / 100f
+        }
+        onFinish()
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "splash")
+    
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.9f,
+        targetValue = 1.1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "logo_scale"
+    )
+    
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(4000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "vinyl_rotate"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF0F1B35),
+                        Color(0xFF020713)
+                    )
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.size(280.dp)) {
+            val radius = size.minDimension / 2
+            drawCircle(
+                color = Color(0xFF80CAFF).copy(alpha = 0.08f * scale),
+                radius = radius * scale,
+                center = center
+            )
+            drawCircle(
+                color = Color(0xFF80F7B7).copy(alpha = 0.04f * scale),
+                radius = radius * 1.3f * scale,
+                center = center
+            )
+        }
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(130.dp)
+                    .scale(scale)
+                    .rotate(rotation)
+                    .shadow(elevation = 20.dp, shape = CircleShape)
+                    .background(
+                        Brush.sweepGradient(
+                            colors = listOf(
+                                Color(0xFF80CAFF),
+                                Color(0xFF80F7B7),
+                                Color(0xFFFF2A85),
+                                Color(0xFF80CAFF)
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+                    .padding(4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF020713), shape = CircleShape)
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MusicNote,
+                        contentDescription = "Aura Music Player",
+                        tint = Color.White,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            Text(
+                text = "AURA MUSIC",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 6.sp,
+                color = Color.White
+            )
+
+            Text(
+                text = "CHRONO SOUND ENGINE v1.2",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Normal,
+                letterSpacing = 3.sp,
+                color = Color(0xFF80CAFF).copy(alpha = 0.7f),
+                modifier = Modifier.padding(top = 6.dp)
+            )
+
+            Spacer(modifier = Modifier.height(64.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(220.dp)
+                    .height(4.dp)
+                    .background(Color.White.copy(alpha = 0.1f), shape = RoundedCornerShape(2.dp))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(progress)
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(Color(0xFF80CAFF), Color(0xFF80F7B7))
+                            ),
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                )
+            }
+
+            Text(
+                text = "Audiosistem yüklənir... ${(progress * 100).toInt()}%",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White.copy(alpha = 0.6f),
+                modifier = Modifier.padding(top = 16.dp)
+            )
+        }
     }
 }
 

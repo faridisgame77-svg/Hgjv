@@ -22,6 +22,11 @@ import java.io.File
 
 class MusicPlayerViewModel : ViewModel() {
 
+    companion object {
+        @Volatile
+        var instance: MusicPlayerViewModel? = null
+    }
+
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     val songs: StateFlow<List<Song>> = _songs.asStateFlow()
 
@@ -113,6 +118,7 @@ class MusicPlayerViewModel : ViewModel() {
     private var progressJob: Job? = null
 
     init {
+        instance = this
         // Initialize simple clean MediaPlayer
         mediaPlayer = MediaPlayer()
     }
@@ -182,7 +188,11 @@ class MusicPlayerViewModel : ViewModel() {
             val maxVol = manager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
             val currentVol = manager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
             if (maxVol > 0) {
-                _systemVolume.value = (currentVol * 100) / maxVol
+                val percent = (currentVol * 100) / maxVol
+                if (_systemVolume.value != percent) {
+                    _systemVolume.value = percent
+                    updateAllWidgetsCombined(context)
+                }
             }
         }
     }
@@ -199,6 +209,7 @@ class MusicPlayerViewModel : ViewModel() {
                 Log.e("MusicPlayerVM", "Səs səviyyəsi təyin edilərkən xəta: ", e)
                 _systemVolume.value = percentage
             }
+            updateAllWidgetsCombined(context)
         }
     }
 
@@ -416,6 +427,7 @@ class MusicPlayerViewModel : ViewModel() {
                     _totalDuration.value = player.duration.toLong()
                     
                     startProgressUpdate()
+                    updateAllWidgetsCombined(context)
                     
                     player.setOnCompletionListener {
                         playNext(context)
@@ -455,6 +467,7 @@ class MusicPlayerViewModel : ViewModel() {
                     playSong(context, current)
                 }
             }
+            updateAllWidgetsCombined(context)
         }
     }
 
@@ -683,6 +696,9 @@ class MusicPlayerViewModel : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
+        if (instance == this) {
+            instance = null
+        }
         stopProgressUpdate()
         try {
             mediaPlayer?.release()
